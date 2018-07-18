@@ -156,13 +156,23 @@ campfireApp(
             scale_fill_manual(values = serverValues$color_map[serverValues$fruit]) +
             NULL
         )
+      } else {
+        suppressWarnings( 
+          ggplot(fruit_bar, aes_string("Year", "retail.value")) +
+            geom_bar(aes(fill = Fruit), position = "dodge", stat="identity") +
+            scale_fill_manual(values = color_map[fruit_def]) +
+            NULL
+        )
       }
     })
     # also on the wall we render which fruit don't appear in the selected dataset
     output$wallText <- renderText({
       if (!is.null(serverValues$go)){
-      return(paste0("The following fruit are not in this dataset: ", 
+        return(paste0("The following fruit are not in this dataset: ", 
                     paste(serverValues$bad_fruit, collapse = " ")))
+      } else {
+        return(paste0("The following fruit are not in this dataset: ", 
+                      paste(bad_fruit, collapse = " ")))
       }
     })
     
@@ -182,6 +192,20 @@ campfireApp(
                   axis.text.y=element_blank(),
                   axis.ticks.y=element_blank()
                   ) +
+            NULL
+        } else {
+          ggplot(fruit_pie, aes(x = "", y = Total.Value, fill = Fruit)) +
+            geom_bar(width = 1, stat = "identity")  +
+            coord_polar(theta = "y", start = 0) +
+            scale_fill_manual(values = color_map[fruit_def]) +
+            scale_y_continuous(breaks = round(cumsum(rev(fruit_pie$Total.Value)), tot_val)) +
+            theme(#axis.title.x=element_blank(),
+              # axis.text.x=element_blank(),
+              # axis.ticks.x=element_blank(),
+              axis.title.y=element_blank(),
+              axis.text.y=element_blank(),
+              axis.ticks.y=element_blank()
+            ) +
             NULL
         }
       )

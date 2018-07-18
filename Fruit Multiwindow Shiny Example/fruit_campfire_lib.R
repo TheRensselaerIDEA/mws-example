@@ -17,6 +17,39 @@ rownames(retail_fruit) <- retail_fruit$Fruit
 cash_fruit <- read.csv("US_Fruit_Cash_Receipts_in_1000s_1980_to_2016.csv")
 rownames(cash_fruit) <- cash_fruit$Fruit
 
+# creating default data, for startup
+{
+  begin <- 1989
+  end <- 2000
+  fruit_def <- c("Apples", "Lemons", "Grapes", "Grapefruits", "Peaches")
+  
+  # subset the df we care about: retail
+  # not all fruit appear in the retail dataset
+  fruit_logical <- fruit_def %in% rownames(retail_fruit)
+  # fruit in retail
+  good_fruit <- fruit_def[fruit_logical]
+  # fruit out of retail
+  bad_fruit <- fruit_def[!fruit_logical]
+  
+  sub_fruit <- retail_fruit[good_fruit,c("Fruit",paste0("X",c(begin:end)))]
+  
+  # make the bar plot data frame (value for each year):
+  
+  # get into long format, using fruits as the id
+  fruit_bar <- melt(sub_fruit, id.vars = "Fruit")
+  colnames(fruit_bar)[2:3] <- c("Year", "retail.value")
+  # remove all X's from the time column (still a string is ok)
+  fruit_bar$Year <- gsub("X","", fruit_bar$Year)
+  
+  # make the pie chart dataframe (sum total value for all years):
+  fruit_pie <- data.frame(matrix(0,nrow(sub_fruit), 2))
+  colnames(fruit_pie) <- c("Fruit", "Total.Value")
+  fruit_pie$Fruit <- sub_fruit$Fruit
+  fruit_pie$Total.Value <- as.numeric(rowSums(sub_fruit[,-1], na.rm = T))
+  fruit_pie <- fruit_pie[order(fruit_pie$Fruit),]
+  tot_val <- sum(fruit_pie$Total.Value)
+}
+
 # variables
 
 color_map <- c("Grapefruits" = "#ea5744", "Lemons" ="#fcf011",
@@ -66,6 +99,7 @@ campfireApp = function(controller = NA, wall = NA, floor = NA, monitor=NA, serve
     observeEvent(input$go, {
       # reassign everything from the input to the serverValues
       # from now on, only reference input values with serverValues
+      
       for (inputId in names(input)) {
         serverValues[[inputId]] <- input[[inputId]]
       }
@@ -123,6 +157,7 @@ campfireApp = function(controller = NA, wall = NA, floor = NA, monitor=NA, serve
       serverValues[["color_map"]] <- color_map
       
     })
+    
     serverFunct(serverValues, output)
     
   })
